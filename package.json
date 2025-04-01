@@ -1,0 +1,11 @@
+{
+  "name": "unitygame_login_savedata",
+  "version": "1.0.0",
+  "description": "Unity game login and save data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Deependra singh",
+  "license": "ISC"
+}
