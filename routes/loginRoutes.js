@@ -5,6 +5,7 @@ module.exports = app => {
 // routes for login
 app.get('/login', async (req, res) => {
     
+    try{
     const { username, password } = req.query;
     if(username == null || password == null) {
         return res.status(400).send('username and password are required');
@@ -37,13 +38,23 @@ app.get('/login', async (req, res) => {
             console.log('user authenticated / logged in');
             userAccount.lastAuthenticated = Date.now();
             await userAccount.save().then(() => {
-                res.status(200).send('user authenticated');
+                res.status(200).json({
+                    status: 'success',
+                    message: 'user authenticated',
+                    user: {
+                      _id: userAccount._id,
+                      username: userAccount.username
+                    }
+                  });
             }).catch((err) => {
                 console.log(err);
                 res.status(500).send('error updating account');
             });
         }
     }
+        }catch(err) {
+            console.log(err);
+        }
 
 
     //res.send('Hello World! : '+ Date.now());
