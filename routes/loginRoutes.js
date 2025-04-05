@@ -3,7 +3,7 @@ const mongooseAcc = require('./../models/Account');
 
 module.exports = app => {
 // routes for login
-app.get('/login', async (req, res) => {
+app.post('/login', async (req, res) => {
     
     try{
     const { username, password } = req.query;
