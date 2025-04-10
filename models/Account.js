@@ -20,6 +20,9 @@ const accountSchema = new mongoose.Schema({
     },
     lastAuthenticated: {
         type: Date
+    },
+    salt: {
+        type: String
     }
 });
 

@@ -9,6 +9,7 @@
   "author": "Deependra singh",
   "license": "ISC",
   "dependencies": {
+    "argon2": "^0.41.1",
     "dotenv": "^16.4.7",
     "express": "^5.1.0",
     "mongoose": "^8.13.1"
