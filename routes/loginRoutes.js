@@ -3,15 +3,23 @@ const mongooseAcc = require('./../models/Account');
 const argon2 = require('argon2');
 const crypto = require('crypto');
 
+//response object to limit the amount of data sent to the client
+var createResponse = function(code, msg, userData = null) {
+    return {code, msg, userData};
+}
+
 module.exports = app => {
 
     // routes for login
     app.post('/login', async (req, res) => {
         
         try{
+            var response = {code: 0, msg: ''};
+
             const { username, password } = req.body;
             if(username == null || password == null) {
-                return res.status(400).send('username and password are required');
+                res.send(createResponse(1, 'username and password are required'));
+                return;
             }
             
             var userAccount = await mongooseAcc.findOne({ username: username});
@@ -20,24 +28,20 @@ module.exports = app => {
                     if(match) {
                         // update last authenticated date
                         userAccount.lastAuthenticated = Date.now();
-                        await userAccount.save();
-                        res.send(userAccount);
-                        console.log("user authenticated: " + userAccount.username);
+                        await userAccount.save();      
+                        res.send(createResponse(0, 'username logged in : ', userAccount)); // 0 for successful login
+                        return;
                     }
                     else {
-                        console.log('invalid password');
-                        res.status(401).send('invalid password');
+                        
+                        res.send(createResponse(1, 'username and password are required')); // 1 for invalid login
+                        return;
                     }
-                }).catch(err => {
-                    console.log("error verifying password: " + err);
-                    res.status(500).send('error verifying password');
                 });
             }
-            else{
-                console.log('user not found');
-                res.status(401).send('user not found');
-            }
-        }catch(err) {
+        
+        }
+        catch(err) {
                 console.log(err);
             }
     });
@@ -48,9 +52,9 @@ module.exports = app => {
         try{
             const { username, password } = req.body;
             if(username == null || password == null) {
-                return res.status(400).send('username and password are required');
+                res.send(createResponse(1, 'username and password are required'));
+                return;
             }
-            console.log('username: ' + username + ' password: ' + password);
             
             var userAccount = await mongooseAcc.findOne({ username: username});
             if(userAccount == null) {
@@ -74,7 +78,7 @@ module.exports = app => {
                         });
         
                         await newAccount.save();
-                        res.send(newAccount);
+                        res.send(createResponse(1, 'Account created : ', newAccount));
                         console.log("account created: " + newAccount.username);
                         return;
                     }).catch(err => {
