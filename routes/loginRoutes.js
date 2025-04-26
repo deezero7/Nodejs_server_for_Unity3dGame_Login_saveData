@@ -30,14 +30,21 @@ module.exports = app => {
                         userAccount.lastAuthenticated = Date.now();
                         await userAccount.save();      
                         res.send(createResponse(0, 'username logged in : ', userAccount)); // 0 for successful login
+                        console.log("user logged in: " + userAccount.username);
                         return;
                     }
                     else {
                         
-                        res.send(createResponse(1, 'username and password are required')); // 1 for invalid login
+                        res.send(createResponse(1, 'username and password not correct')); // 1 for invalid login
+                        console.log("user not found ");
                         return;
                     }
                 });
+            }
+            else {
+                res.send(createResponse(1, 'username and password not correct')); // 1 for invalid login
+                console.log("user not found ");
+                return;
             }
         
         }
@@ -78,7 +85,7 @@ module.exports = app => {
                         });
         
                         await newAccount.save();
-                        res.send(createResponse(1, 'Account created : ', newAccount));
+                        res.send(createResponse(0, 'Account created : ', newAccount));
                         console.log("account created: " + newAccount.username);
                         return;
                     }).catch(err => {
