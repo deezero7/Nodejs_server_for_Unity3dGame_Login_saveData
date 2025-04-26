@@ -23,6 +23,10 @@ const accountSchema = new mongoose.Schema({
     },
     salt: {
         type: String
+    },
+    adminFlag: {
+        type: Boolean,
+        default: false
     }
 });
 

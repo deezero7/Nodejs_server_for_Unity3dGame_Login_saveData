@@ -3,9 +3,21 @@ const mongooseAcc = require('./../models/Account');
 const argon2 = require('argon2');
 const crypto = require('crypto');
 
+// regex for password validation
+const PASSWORD_REGEX = new RegExp('^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)[A-Za-z\\d]{6,25}$');
+
+// at least 8 characters, 1 uppercase, 1 lowercase, 1 number
+
 //response object to limit the amount of data sent to the client
-var createResponse = function(code, msg, userData = null) {
-    return {code, msg, userData};
+var createResponse = function(code, message, userData = null) {
+    return {code, message, userData};
+}
+//response object to limit the amount of data sent to the client
+function safeUserData(account) {
+    return {
+        username: account.username,
+        adminFlag: account.adminFlag
+    }
 }
 
 module.exports = app => {
@@ -14,22 +26,23 @@ module.exports = app => {
     app.post('/login', async (req, res) => {
         
         try{
-            var response = {code: 0, msg: ''};
 
             const { username, password } = req.body;
-            if(username == null || password == null) {
-                res.send(createResponse(1, 'username and password are required'));
+            if(username == null || PASSWORD_REGEX.test(password) == false) {
+                res.send(createResponse(3, 'username and password are required'));
                 return;
             }
             
-            var userAccount = await mongooseAcc.findOne({ username: username});
+            var userAccount = await mongooseAcc.findOne({ username: username}, 'username  password adminFlag');
+            console.log(userAccount);
             if(userAccount != null) {
                 argon2.verify(userAccount.password, password).then(async (match) => {
                     if(match) {
                         // update last authenticated date
                         userAccount.lastAuthenticated = Date.now();
-                        await userAccount.save();      
-                        res.send(createResponse(0, 'username logged in : ', userAccount)); // 0 for successful login
+                        await userAccount.save(); 
+                        
+                        res.send(createResponse(0, 'username logged in : ', safeUserData(userAccount))); // 0 for successful login
                         console.log("user logged in: " + userAccount.username);
                         return;
                     }
@@ -58,12 +71,17 @@ module.exports = app => {
         
         try{
             const { username, password } = req.body;
-            if(username == null || password == null) {
+            if(username == null || username.length < 3 || username.length > 25) {
                 res.send(createResponse(1, 'username and password are required'));
                 return;
             }
+            if(PASSWORD_REGEX.test(password) == false) {
+                res.send(createResponse(3, 'password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number'));
+                return;
+            }
             
-            var userAccount = await mongooseAcc.findOne({ username: username});
+            var userAccount = await mongooseAcc.findOne({ username: username}, '_id');
+            //console.log(userAccount); // debugging purpose
             if(userAccount == null) {
                 // create new account
                 console.log('creating new account');
@@ -85,7 +103,8 @@ module.exports = app => {
                         });
         
                         await newAccount.save();
-                        res.send(createResponse(0, 'Account created : ', newAccount));
+
+                        res.send(createResponse(0, 'Account created : ', safeUserData(newAccount))); // 0 for successful login
                         console.log("account created: " + newAccount.username);
                         return;
                     }).catch(err => {
@@ -97,7 +116,9 @@ module.exports = app => {
                 
             }
             else{
-                res.send("Username already exists, please choose another one");
+                res.send(createResponse(2, "Username already exists, please choose another one",null));
+
+                console.log(userAccount); // debugging purpose
             }
             }
         catch(err) {
