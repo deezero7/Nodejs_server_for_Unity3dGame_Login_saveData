@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const keys = require('./config/keys');
-require('dotenv').config();
 
 // define mongodb connection url
 const mongoURL = keys.mongoURI;
