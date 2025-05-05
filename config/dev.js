@@ -1,9 +1,10 @@
-require('dotenv').config();
+require('dotenv').config(); // .env file
 
 
 module.exports = { 
     port: 3000,
-    mongoURI: process.env.DB_URL
+    mongoURI: process.env.DB_URL,
+    jwtSecret: process.env.JWT_SECRET
 };
 
 /*
