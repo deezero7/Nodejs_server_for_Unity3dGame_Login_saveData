@@ -4,6 +4,12 @@ const router = express.Router();
 const mongooseAcc = require('./../models/Account');
 const argon2 = require('argon2');
 const crypto = require('crypto');
+const multer = require('multer'); // set the destination for uploaded files
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 200 * 1024 }
+  }); // limit to 200KB
+
 
 // regex for password validation
 // at least 8 characters, 1 uppercase, 1 lowercase, 1 number
@@ -20,16 +26,26 @@ function getIp(req) {
     return req.headers['x-forwarded-for'] || req.connection.remoteAddress;
 }
 
-//response object to limit the amount of data sent to the client
+//response object to limit the amount of data sent to the client to unity for json
 var createResponse = function(code, message, userData = null) {
     return {code, message, userData};
 }
 //response object to limit the amount of data sent to the client
-function safeUserData(account) {
-    return {
-        username: account.username,
-        adminFlag: account.adminFlag
+function safeUserData(user) {
+    const data = {
+        username: user.username,
+        isAdmin: user.adminFlag === true,
+        gameData: user.gameData || { gold: 0, gems: 0, level: 1, experiencePoints: 0 },
+        userProfilePicture: null
+    };
+
+    if (user.userProfilePicture?.data) {
+        const base64 = user.userProfilePicture.data.toString('base64');
+        const mimeType = user.userProfilePicture.contentType || 'image/png';
+        data.userProfilePicture = `data:${mimeType};base64,${base64}`;
     }
+
+    return data;
 }
 
 
@@ -59,7 +75,7 @@ router.post('/login', async (req, res) => {
                 return res.status(429).send(createResponse(98, 'Account locked due to too many failed attempts. Try again later.'));
             }
             
-            var userAccount = await mongooseAcc.findOne({ username: username}, 'username  password adminFlag');
+            var userAccount = await mongooseAcc.findOne({ username: username}, 'username password adminFlag userProfilePicture gameData');
             console.log(userAccount);
             if(userAccount != null) {
                 argon2.verify(userAccount.password, password).then(async (match) => {
@@ -171,5 +187,104 @@ router.post('/createacc', async (req, res) => {
                 console.log(err);
             }
     });
+
+// endpoint for user profile picture upload
+router.post('/uploadProfilePictureWeb', upload.single('image'), async (req, res) => {
+    try {
+        const { username } = req.body;
+        if (!username || !req.file) {
+            return res.status(400).send(createResponse(1, 'Username and image file are required'));
+        }
+
+        const userAccount = await mongooseAcc.findOne({ username });
+        if (!userAccount) {
+            return res.status(404).send(createResponse(2, 'User not found'));
+        }
+
+        userAccount.userProfilePicture.data = req.file.buffer;
+        userAccount.userProfilePicture.contentType = req.file.mimetype;
+
+        await userAccount.save();
+        res.send(createResponse(0, 'Profile picture uploaded successfully (web)'));
+        console.log("Profile picture uploaded successfully (web) for user: " + username);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(createResponse(3, 'Server error'));
+    }
+});
+
+
+// endpoint for getting user profile picture if needed
+router.get('/getProfilePicture/:username', async (req, res) => {
+        try {
+            const { username } = req.params;
+            if (!username) {
+                return res.status(400).send(createResponse(1, 'Username is required'));
+            }
+
+            // Find the user account
+            const userAccount = await mongooseAcc.findOne({ username: username });
+            if (!userAccount) {
+                return res.status(404).send(createResponse(2, 'User not found'));
+            }
+
+            // Send the profile picture
+            res.set('Content-Type', userAccount.userProfilePicture.contentType);
+            res.send(userAccount.userProfilePicture.data);
+        } catch (err) {
+            console.error(err);
+            res.status(500).send(createResponse(3, 'Server error'));
+        }
+});
+
+// endpoint for updating game data
+router.put('/saveGameData', async (req, res) => {
+    try {
+        const { username, gameData } = req.body;
+        if (!username || !gameData) {
+            return res.status(400).send(createResponse(1, 'Username and game data are required'));
+        }
+
+        // Find and update the user account using findOneAndUpdate
+        const userAccount = await mongooseAcc.findOneAndUpdate(
+            { username },  // Find the user by username
+            { $set: { gameData } },  // Update the gameData field
+            { new: true }  // Return the updated document
+        );
+
+        if (!userAccount) {
+            return res.status(404).send(createResponse(2, 'User not found'));
+        }
+
+        // Send success response with updated game data
+        res.send(createResponse(0, 'Game data saved successfully', userAccount.gameData));
+    } catch (err) {
+        console.error(err);
+        res.status(500).send(createResponse(3, 'Server error'));
+    }
+});
+
+
+// endpoint for getting game data
+router.get('/getGameData/:username', async (req, res) => {
+        try {
+            const {username} = req.params; // get username from params cause using get request(not body as in post)
+            if(!username) {
+                return res.status(400).send(createResponse(1, 'usernname is required'));
+            }
+
+            const userAccount = await mongooseAcc.findOne({username: username}, 'gameData');
+            if(!userAccount) {
+                return res.status(404).send(createResponse(2, 'User not found'));
+            }
+
+            res.send(createResponse(0, 'Game data retrieved successfully', userAccount.gameData));
+
+        }
+        catch(err) {
+            console.error(err);
+            res.status(500).send(createResponse(3, 'Server error'));
+        }
+})
 
     module.exports = router;

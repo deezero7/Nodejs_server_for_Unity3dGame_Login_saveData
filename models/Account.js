@@ -27,6 +27,16 @@ const accountSchema = new mongoose.Schema({
     adminFlag: {
         type: Boolean,
         default: false
+    },
+    userProfilePicture:{
+        data: Buffer,
+        contentType: String
+    },
+    gameData: {
+        gold: { type: Number, default: 0 },
+        gems: { type: Number, default: 0 },
+        level: { type: Number, default: 1 },
+        experiencePoints: { type: Number, default: 0 }
     }
 });
 
