@@ -5,3 +5,6 @@
 -> Run nodejs server connect it with mongodb server ( code in other repo called 'Nodejs_server_for_Unity3dGame_Login_saveData').
 
 ->In project forms are used to transmit data which is safer than query, router is used for scalability, Regular expression (regexp) for password strength, Multer is used for user pofile pic save cause Cleaner and more secure for real-world production apps ( can use Binary Data Upload if you prefer).
+
+-> argon2 for password hashing , 
+-> ip blocking after few time password wrong enter.
