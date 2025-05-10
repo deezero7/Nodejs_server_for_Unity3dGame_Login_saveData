@@ -69,11 +69,11 @@ router.post('/autoLogin', auth, async (req, res) => {
         
         //auto-refresh on every successful login  sliding session (the token expiry keeps moving forward with activity)
         //Generate a new JWT token and update in unity too at autologin
-        const token = jwt.sign({ username: userAccount.username }, JWT_SECRET, { expiresIn: '168h' });
+        const newToken = jwt.sign({ username: userAccount.username }, JWT_SECRET, { expiresIn: '168h' });
 
         res.send(createResponse(0, 'Login successful', {
-            ...safeUserData(userAccount), // send only safe data and with spread operator to add data or fields to the object
-                            token
+            ...safeUserData(user), // send only safe data and with spread operator to add data or fields to the object
+            newToken
         }));
         
     } catch (err) {
