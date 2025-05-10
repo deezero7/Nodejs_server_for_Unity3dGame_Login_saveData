@@ -6,5 +6,9 @@
 
 ->In project forms are used to transmit data which is safer than query, router is used for scalability, Regular expression (regexp) for password strength, Multer is used for user pofile pic save cause Cleaner and more secure for real-world production apps ( can use Binary Data Upload if you prefer).
 
+NODE js
 -> argon2 for password hashing , 
 -> ip blocking after few time password wrong enter.
+-> Jwt token for authentication.
+-> express-validator for validation of form fields.
+-> mongoose for database connection and schema creation.

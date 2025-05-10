@@ -22,7 +22,7 @@ const PASSWORD_REGEX = new RegExp('^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)[A-Za-z\\d]{6
 // IP blocking map (in-memory, fast)
 const failedLoginAttempts = {};  // IP: { count, lastAttempt }
 const failedUsernameAttempts = {}; // username: { count, lastAttempt }
-const BLOCK_THRESHOLD = 2;       // 10 failed attempts
+const BLOCK_THRESHOLD = 5;       // 5 failed attempts
 const BLOCK_TIME_MS = 30 * 60 * 1000; // 30 minutes block
 
 // get real ip
