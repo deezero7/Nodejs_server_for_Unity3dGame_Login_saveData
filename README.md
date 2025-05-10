@@ -12,3 +12,8 @@ NODE js
 -> Jwt token for authentication. Auto refresh jwt on auto login successful.
 -> express-validator for validation of form fields.
 -> mongoose for database connection and schema creation.
+
+MONGO DB
+-> Mongoose Schema for creating collections and models.
+-> MongoDb Atlas for hosting db online.
+
