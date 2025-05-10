@@ -9,6 +9,6 @@
 NODE js
 -> argon2 for password hashing , 
 -> ip blocking after few time password wrong enter.
--> Jwt token for authentication.
+-> Jwt token for authentication. Auto refresh jwt on auto login successful.
 -> express-validator for validation of form fields.
 -> mongoose for database connection and schema creation.
