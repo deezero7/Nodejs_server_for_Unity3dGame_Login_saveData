@@ -9,7 +9,10 @@ const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 200 * 1024 }
   }); // limit to 200KB
-
+// for generating token required this
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET;
+// for middleware authentication needs this
 const auth = require('../middleware/auth');
 
 // regex for password validation
@@ -112,7 +115,7 @@ router.post('/login', async (req, res) => {
                         delete failedUsernameAttempts[username];
                         
                         // 0 for successful login
-                        const token = jwt.sign({ username: userAccount.username }, JWT_SECRET, { expiresIn: '1h' });
+                        const token = jwt.sign({ username: userAccount.username }, JWT_SECRET, { expiresIn: '168h' });
 
                         res.send(createResponse(0, 'Login successful', {
                             ...safeUserData(userAccount), // send only safe data and with spread operator to add data or fields to the object
