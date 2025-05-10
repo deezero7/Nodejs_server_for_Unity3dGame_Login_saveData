@@ -300,6 +300,7 @@ router.put('/saveGameData', async (req, res) => {
 
         // Send success response with updated game data
         res.send(createResponse(0, 'Game data saved successfully', userAccount.gameData));
+        console.log("Game data saved successfully for user: " + username);
     } catch (err) {
         console.error(err);
         res.status(500).send(createResponse(3, 'Server error'));
