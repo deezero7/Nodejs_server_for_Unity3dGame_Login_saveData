@@ -66,8 +66,16 @@ router.post('/autoLogin', auth, async (req, res) => {
         if (!user) {
             return res.status(404).send({ message: 'User not found' });
         }
+        
+        //auto-refresh on every successful login  sliding session (the token expiry keeps moving forward with activity)
+        //Generate a new JWT token and update in unity too at autologin
+        const token = jwt.sign({ username: userAccount.username }, JWT_SECRET, { expiresIn: '168h' });
 
-        res.send(createResponse(0, 'Token valid', safeUserData(user)));
+        res.send(createResponse(0, 'Login successful', {
+            ...safeUserData(userAccount), // send only safe data and with spread operator to add data or fields to the object
+                            token
+        }));
+        
     } catch (err) {
         console.error(err);
         res.status(500).send({ message: 'Server error' });
