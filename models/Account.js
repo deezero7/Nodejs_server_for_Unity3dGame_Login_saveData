@@ -38,6 +38,7 @@ const accountSchema = new mongoose.Schema({
         level: { type: Number, default: 1 },
         experiencePoints: { type: Number, default: 0 }
     }
+    
 });
 
 // create the Account model using the schema

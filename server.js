@@ -15,7 +15,7 @@ dotenv.config();
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded())
 // parse application/json
-app.use(bodyParser.json())
+app.use(bodyParser.json())  // for parsing application/json cauz not all requests are json
 
 // Trust proxy for real IPs (important for blocking)
 app.set('trust proxy', true);

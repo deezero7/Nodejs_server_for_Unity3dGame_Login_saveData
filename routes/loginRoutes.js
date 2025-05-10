@@ -10,6 +10,7 @@ const upload = multer({
     limits: { fileSize: 200 * 1024 }
   }); // limit to 200KB
 
+const auth = require('../middleware/auth');
 
 // regex for password validation
 // at least 8 characters, 1 uppercase, 1 lowercase, 1 number
@@ -39,7 +40,7 @@ function safeUserData(user) {
         userProfilePicture: null
     };
 
-    if (user.userProfilePicture?.data) {
+    if (user.userProfilePicture?.data) { // if userProfilePicture exists and has data
         const base64 = user.userProfilePicture.data.toString('base64');
         const mimeType = user.userProfilePicture.contentType || 'image/png';
         data.userProfilePicture = `data:${mimeType};base64,${base64}`;
@@ -50,6 +51,26 @@ function safeUserData(user) {
 
 
 // ===== ROUTES =====
+
+// middleware/auth.js already verifies token, auto login
+router.post('/autoLogin', auth, async (req, res) => {
+    try {
+        const user = await mongooseAcc.findOne(
+            { username: req.user.username },
+            'username adminFlag gameData userProfilePicture'
+        );
+
+        if (!user) {
+            return res.status(404).send({ message: 'User not found' });
+        }
+
+        res.send(createResponse(0, 'Token valid', safeUserData(user)));
+    } catch (err) {
+        console.error(err);
+        res.status(500).send({ message: 'Server error' });
+    }
+});
+
 
 // Login Route
 router.post('/login', async (req, res) => {
@@ -83,12 +104,20 @@ router.post('/login', async (req, res) => {
                         // update last authenticated date
                         userAccount.lastAuthenticated = Date.now();
                         await userAccount.save(); 
+
+
                         
                         // Login success: reset fail counts
                         delete failedLoginAttempts[ip];
                         delete failedUsernameAttempts[username];
+                        
+                        // 0 for successful login
+                        const token = jwt.sign({ username: userAccount.username }, JWT_SECRET, { expiresIn: '1h' });
 
-                        res.send(createResponse(0, 'username logged in : ', safeUserData(userAccount))); // 0 for successful login
+                        res.send(createResponse(0, 'Login successful', {
+                            ...safeUserData(userAccount), // send only safe data and with spread operator to add data or fields to the object
+                            token
+                        }));
                         console.log("user logged in: " + userAccount.username);
                         return;
                     }
