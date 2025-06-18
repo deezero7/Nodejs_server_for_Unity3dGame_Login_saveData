@@ -16,7 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const auth = require("../middleware/auth");
 
 // regex for password validation
-// at least 8 characters, 1 uppercase, 1 lowercase, 1 number
+// at least 6 characters, 1 uppercase, 1 lowercase, 1 number, and one special character (@$!%*?&)
 const PASSWORD_REGEX = new RegExp(
   "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{6,25}$"
 );
