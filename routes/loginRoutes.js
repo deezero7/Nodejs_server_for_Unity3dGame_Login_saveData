@@ -143,6 +143,13 @@ router.post("/login", async (req, res) => {
       { username: username },
       "username password adminFlag userProfilePicture gameData"
     );
+    // Check if user email is verified
+    if (!userAccount.emailVerified) {
+      return res.send(
+        createResponse(4, "Please verify your email before logging in.")
+      );
+    }
+
     console.log(userAccount);
     if (userAccount != null) {
       argon2.verify(userAccount.password, password).then(async (match) => {
@@ -216,7 +223,10 @@ router.post("/login", async (req, res) => {
 // Create Account Route
 router.post("/createacc", async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
+    if (!email || !username || !password) {
+      return res.send(createResponse(1, "All fields are required"));
+    }
     if (username == null || username.length < 3 || username.length > 25) {
       res.send(createResponse(1, "username and password are required"));
       return;
@@ -231,55 +241,58 @@ router.post("/createacc", async (req, res) => {
       return;
     }
 
-    var userAccount = await mongooseAcc.findOne({ username: username }, "_id");
-    //console.log(userAccount); // debugging purpose
-    if (userAccount == null) {
-      // create new account
-      console.log("creating new account");
-
-      // hash password
-      var accSalt = null;
-      var hashPass = null;
-      crypto.randomBytes(16, function (err, salt) {
-        accSalt = salt;
-        argon2
-          .hash(password, salt)
-          .then(async (hash) => {
-            var newAccount = new mongooseAcc({
-              username: username,
-              password: hash,
-              email: username + "@example.com",
-              createdAt: Date.now(),
-              lastAuthenticated: Date.now(),
-              salt: salt,
-            });
-
-            await newAccount.save();
-
-            res.send(
-              createResponse(0, "Account created : ", safeUserData(newAccount))
-            ); // 0 for successful login
-            console.log("account created: " + newAccount.username);
-            return;
-          })
-          .catch((err) => {
-            console.log("error hashing password: " + err);
-            res.status(500).send("error hashing password");
-          });
-      });
-    } else {
-      res.send(
-        createResponse(
-          2,
-          "Username already exists, please choose another one",
-          null
-        )
-      );
-
-      console.log(userAccount); // debugging purpose
+    const exists = await mongooseAcc.findOne({
+      $or: [{ username }, { email }],
+    });
+    if (exists) {
+      return res.send(createResponse(2, "Username or Email already in use"));
     }
+
+    const salt = crypto.randomBytes(16);
+    const hash = await argon2.hash(password, salt);
+    const emailVerificationToken = jwt.sign({ email }, JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
+    const newUser = new mongooseAcc({
+      username,
+      password: hash,
+      salt,
+      email,
+      emailVerified: false,
+      emailVerificationToken,
+      createdAt: Date.now(),
+      lastAuthenticated: Date.now(),
+    });
+
+    await newUser.save();
+    await sendVerificationEmail(email, emailVerificationToken);
+
+    res.send(createResponse(0, "Account created. Verify your email."));
   } catch (err) {
     console.log(err);
+    res.status(500).send(createResponse(500, "Error creating account"));
+  }
+});
+
+// Endpoint to resend verification email
+router.get("/verify-email", async (req, res) => {
+  const { token } = req.query;
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = await mongooseAcc.findOne({ email: decoded.email });
+
+    if (!user) return res.status(404).send("User not found");
+    if (user.emailVerified) return res.send("Email already verified.");
+
+    user.emailVerified = true;
+    user.emailVerificationToken = undefined;
+    await user.save();
+
+    res.send("✅ Email verified successfully. You can now log in.");
+  } catch (err) {
+    console.error(err);
+    res.status(400).send("Invalid or expired token");
   }
 });
 
