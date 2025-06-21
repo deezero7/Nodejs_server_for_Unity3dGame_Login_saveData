@@ -286,14 +286,15 @@ router.post("/createacc", async (req, res) => {
 // endpoint for user profile picture upload
 router.post(
   "/uploadProfilePictureWeb",
+  auth,
   upload.single("image"),
   async (req, res) => {
     try {
-      const { username } = req.body;
-      if (!username || !req.file) {
+      const username = req.user.username; // from token
+      if (!req.file) {
         return res
           .status(400)
-          .send(createResponse(1, "Username and image file are required"));
+          .send(createResponse(1, "Image file is required"));
       }
 
       const userAccount = await mongooseAcc.findOne({ username });
@@ -308,51 +309,13 @@ router.post(
       res.send(
         createResponse(0, "Profile picture uploaded successfully (web)")
       );
-      console.log(
-        "Profile picture uploaded successfully (web) for user: " + username
-      );
+      console.log("Profile picture uploaded for user:", username);
     } catch (err) {
       console.error(err);
       res.status(500).send(createResponse(3, "Server error"));
     }
   }
 );
-
-// endpoint for uploading profile picture in base64 format
-router.post("/uploadProfilePictureBase64", async (req, res) => {
-  try {
-    const { username, imageData, mimeType } = req.body;
-
-    if (!username || !imageData || !mimeType) {
-      return res
-        .status(400)
-        .send(createResponse(1, "username, imageData, and mimeType required"));
-    }
-
-    const buffer = Buffer.from(imageData, "base64");
-
-    // Limit check: max 200KB
-    if (buffer.length > 200 * 1024) {
-      return res
-        .status(413)
-        .send(createResponse(2, "Image must be ≤ 200KB in size"));
-    }
-
-    const userAccount = await mongooseAcc.findOne({ username });
-    if (!userAccount) {
-      return res.status(404).send(createResponse(3, "User not found"));
-    }
-
-    userAccount.userProfilePicture.data = buffer;
-    userAccount.userProfilePicture.contentType = mimeType;
-
-    await userAccount.save();
-    res.send(createResponse(0, "Profile picture uploaded successfully"));
-  } catch (err) {
-    console.error(err);
-    res.status(500).send(createResponse(4, "Server error"));
-  }
-});
 
 // endpoint for getting user profile picture if needed
 router.get("/getProfilePicture/:username", async (req, res) => {
