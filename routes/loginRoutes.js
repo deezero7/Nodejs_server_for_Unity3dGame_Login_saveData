@@ -143,7 +143,7 @@ router.post("/login", async (req, res) => {
 
     var userAccount = await mongooseAcc.findOne(
       { username: username },
-      "username password adminFlag userProfilePicture gameData"
+      "username password emailVerified adminFlag userProfilePicture gameData"
     );
     // Check if user email is verified
     if (!userAccount.emailVerified) {
