@@ -9,7 +9,7 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = async function sendVerificationEmail(to, token) {
-  const link = `https://your-domain.com/u3d/verify-email?token=${token}&email=${encodeURIComponent(
+  const link = `https://nodejs-server-for-unity3dgame-login-5vxc.onrender.com/u3d/verify-email?token=${token}&email=${encodeURIComponent(
     to
   )}`;
   try {
