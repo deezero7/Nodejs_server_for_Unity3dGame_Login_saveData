@@ -14,6 +14,8 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = process.env.JWT_SECRET;
 // for middleware authentication needs this
 const auth = require("../middleware/auth");
+// for sending verification email
+const sendVerificationEmail = require("../utils/sendVerificationEmail");
 
 // regex for password validation
 // at least 6 characters, 1 uppercase, 1 lowercase, 1 number, and one special character (@$!%*?&)
@@ -225,6 +227,7 @@ router.post("/createacc", async (req, res) => {
   try {
     const { username, password, email } = req.body;
     if (!email || !username || !password) {
+      console.log("all fields are required");
       return res.send(createResponse(1, "All fields are required"));
     }
     if (username == null || username.length < 3 || username.length > 25) {
