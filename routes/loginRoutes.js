@@ -452,4 +452,43 @@ router.get("/getGameDataSecured", auth, async (req, res) => {
   }
 });
 
+/*In Unity’s ValidateTokenCoroutine, this runs when there's any failure (not just actual expiry):
+If the server responds with:
+503 (Render is waking from sleep)
+404 (no /validate-token route)
+500 (unexpected server issue)
+…it still clears a perfectly valid token.
+*/
+// Token validation route
+router.post("/validate-token", async (req, res) => {
+  try {
+    const { token } = req.body;
+    if (!token) {
+      return res.status(400).send({ code: 400, message: "Token is required" });
+    }
+
+    try {
+      const decoded = jwt.verify(token, JWT_SECRET);
+      const user = await mongooseAcc.findOne({ username: decoded.username });
+
+      if (!user) {
+        return res.status(404).send({ code: 404, message: "User not found" });
+      }
+
+      return res.send({
+        code: 0,
+        message: "Token is valid",
+        username: user.username,
+      });
+    } catch (err) {
+      return res
+        .status(401)
+        .send({ code: 401, message: "Invalid or expired token" });
+    }
+  } catch (err) {
+    console.error("Token validation error:", err);
+    res.status(500).send({ code: 500, message: "Server error" });
+  }
+});
+
 module.exports = router;
