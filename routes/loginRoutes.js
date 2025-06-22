@@ -35,8 +35,13 @@ function getIp(req) {
 }
 
 //response object to limit the amount of data sent to the client to unity for json
-var createResponse = function (code, message, userData = null) {
-  return { code, message, userData };
+var createResponse = function (
+  code,
+  message,
+  userData = null,
+  extraFields = {}
+) {
+  return { code, message, userData, ...extraFields };
 };
 //response object to limit the amount of data sent to the client
 function safeUserData(user) {
@@ -82,12 +87,11 @@ router.post("/autoLogin", auth, async (req, res) => {
       expiresIn: "168h",
     });
 
-    res.send({
-      code: 0,
-      message: "Login successful",
-      userData: safeUserData(user),
-      newToken, // ✅ moved outside userData for Unity to parse
-    });
+    res.send(
+      createResponse(0, "Auto login successful", safeUserData(user), {
+        newToken,
+      })
+    );
 
     console.log("Auto logged in: " + user.username);
   } catch (err) {
