@@ -82,12 +82,12 @@ router.post("/autoLogin", auth, async (req, res) => {
       expiresIn: "168h",
     });
 
-    res.send(
-      createResponse(0, "Login successful", {
-        ...safeUserData(user), // send only safe data and with spread operator to add data or fields to the object
-        newToken,
-      })
-    );
+    res.send({
+      code: 0,
+      message: "Login successful",
+      userData: safeUserData(user),
+      newToken, // ✅ moved outside userData for Unity to parse
+    });
 
     console.log("Auto logged in: " + user.username);
   } catch (err) {
