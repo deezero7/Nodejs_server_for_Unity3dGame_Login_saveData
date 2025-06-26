@@ -147,7 +147,7 @@ router.post("/login", async (req, res) => {
 
     var userAccount = await mongooseAcc.findOne(
       { username: username },
-      "username password emailVerified adminFlag userProfilePicture gameData"
+      "username password emailVerified adminFlag userProfilePicture gameData lastEmailVerificationSent "
     );
 
     // Check if user email is verified and send verification email again if not verified in 1 day(if it expired)
