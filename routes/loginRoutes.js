@@ -167,9 +167,13 @@ router.post("/login", async (req, res) => {
       }
 
       // send a verfication email again if not verified and its expired
-      const emailVerificationToken = jwt.sign({ email }, JWT_SECRET, {
-        expiresIn: "1d",
-      });
+      const emailVerificationToken = jwt.sign(
+        { email: userAccount.email },
+        JWT_SECRET,
+        {
+          expiresIn: "1d",
+        }
+      );
 
       await sendVerificationEmail(email, emailVerificationToken);
       // Update timestamp for last email verification sent
