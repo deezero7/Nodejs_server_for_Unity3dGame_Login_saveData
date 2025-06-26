@@ -45,6 +45,10 @@ const accountSchema = new mongoose.Schema({
     level: { type: Number, default: 1 },
     experiencePoints: { type: Number, default: 0 },
   },
+
+  lastEmailVerificationSent: {
+    type: Date,
+  },
 });
 
 const Account = mongoose.model("Account", accountSchema);

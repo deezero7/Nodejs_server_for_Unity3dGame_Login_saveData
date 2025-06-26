@@ -149,8 +149,33 @@ router.post("/login", async (req, res) => {
       { username: username },
       "username password emailVerified adminFlag userProfilePicture gameData"
     );
-    // Check if user email is verified
+
+    // Check if user email is verified and send verification email again if not verified in 1 day(if it expired)
     if (!userAccount.emailVerified) {
+      // Check if the last email verification was sent within the last 24 hours
+      // If so, do not send another email and inform the user to verify their email
+      const now = Date.now();
+      const MIN_WAIT_TIME_MS = 24 * 60 * 60 * 1000; // 1 day in milliseconds
+      if (
+        userAccount.lastEmailVerificationSent &&
+        now - new Date(userAccount.lastEmailVerificationSent).getTime() <
+          MIN_WAIT_TIME_MS
+      ) {
+        return res.send(
+          createResponse(4, "Please verify your email before logging in.")
+        );
+      }
+
+      // send a verfication email again if not verified and its expired
+      const emailVerificationToken = jwt.sign({ email }, JWT_SECRET, {
+        expiresIn: "1d",
+      });
+
+      await sendVerificationEmail(email, emailVerificationToken);
+      // Update timestamp for last email verification sent
+      userAccount.lastEmailVerificationSent = new Date();
+      await userAccount.save();
+
       return res.send(
         createResponse(4, "Please verify your email before logging in.")
       );
@@ -270,6 +295,7 @@ router.post("/createacc", async (req, res) => {
       emailVerificationToken,
       createdAt: Date.now(),
       lastAuthenticated: Date.now(),
+      lastEmailVerificationSent: Date.now(),
     });
 
     await newUser.save();
@@ -282,7 +308,7 @@ router.post("/createacc", async (req, res) => {
   }
 });
 
-// Endpoint to resend verification email
+// to verify email form  mail
 router.get("/verify-email", async (req, res) => {
   const { token } = req.query;
   try {
