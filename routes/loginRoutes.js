@@ -100,7 +100,7 @@ router.post("/autoLogin", auth, async (req, res) => {
   }
 });
 
-// Login Route
+// Login Route and resend verification email if not verified and it's expired
 router.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -255,7 +255,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// Create Account Route
+// Create Account Route and initial email verification sent
 router.post("/createacc", async (req, res) => {
   try {
     const { username, password, email } = req.body;
@@ -312,7 +312,8 @@ router.post("/createacc", async (req, res) => {
   }
 });
 
-// to verify email form  mail
+// route to verify email form  mail sent to user
+// this is called when user clicks on the link in the email
 router.get("/verify-email", async (req, res) => {
   const { token } = req.query;
   try {
