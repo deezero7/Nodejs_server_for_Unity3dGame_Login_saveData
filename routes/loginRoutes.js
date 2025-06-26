@@ -175,7 +175,7 @@ router.post("/login", async (req, res) => {
         }
       );
 
-      await sendVerificationEmail(email, emailVerificationToken);
+      await sendVerificationEmail(userAccount.email, emailVerificationToken);
       // Update timestamp for last email verification sent
       userAccount.lastEmailVerificationSent = new Date();
       await userAccount.save();
