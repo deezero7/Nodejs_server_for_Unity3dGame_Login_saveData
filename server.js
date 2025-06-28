@@ -24,7 +24,10 @@ app.set("trust proxy", true);
 // allow only your frontend domain
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://yourfrontend.com"], // replace with your actual frontend domain
+    origin: [
+      "http://localhost:3000",
+      "https://deezero7.github.io/webapp_for_Unity3dGame_nextjs-/",
+    ], // replace with your actual frontend domain
     credentials: true, // if using cookies/auth tokens
   })
 );
