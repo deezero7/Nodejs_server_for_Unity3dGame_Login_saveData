@@ -17,7 +17,7 @@ const auth = require("../middleware/auth");
 // for sending verification email
 const sendVerificationEmail = require("../utils/sendVerificationEmail");
 // for sending reset password email
-const sendResetPasswordEmail = require("../utils/sendResetPasswordEmail");
+const sendResetPasswordEmail = require("../utils/sendPasswordResetEmail");
 
 // regex for password validation
 // at least 6 characters, 1 uppercase, 1 lowercase, 1 number, and one special character (@$!%*?&)
@@ -497,7 +497,7 @@ If the server responds with:
 …it still clears a perfectly valid token.
 */
 // Token validation route
-router.post("/validate-token", async (req, res) => {
+router.post("/validateToken", async (req, res) => {
   try {
     const { token } = req.body;
     if (!token) {
