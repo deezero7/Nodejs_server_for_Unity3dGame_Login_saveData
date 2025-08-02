@@ -13,6 +13,7 @@ module.exports = async function sendVerificationEmail(to, token) {
   const link = `https://nodejs-server-for-unity3dgame-login-5vxc.onrender.com/u3d/resetPassword?token=${token}&email=${encodeURIComponent(
     to
   )}`;
+
   try {
     await transporter.sendMail({
       from: `"deeS Unity Game" <${process.env.EMAIL_USER}>`,
