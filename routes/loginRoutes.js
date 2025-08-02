@@ -534,37 +534,54 @@ router.post("/forgotPassword", async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
-      return res.status(400).send(createResponse(1, "email are required"));
+      return res.status(400).send(createResponse(1, "Email is required"));
     }
 
     const userAccount = await mongooseAcc.findOne({ email });
     if (!userAccount) {
-      return res.status(404).send(createResponse(2, "email not found"));
+      return res.status(404).send(createResponse(2, "Email not found"));
     }
 
-    // Generate a password reset token
+    // Cooldown check: allow only one request per hour
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 3600000); // 1 hour = 3600000 ms
+
+    if (userAccount.lastPasswordResetRequest && userAccount.lastPasswordResetRequest > oneHourAgo) {
+      const minutesLeft = Math.ceil(
+        (userAccount.lastPasswordResetRequest.getTime() - oneHourAgo.getTime()) / 60000
+      );
+      return res.status(429).send(
+        createResponse(4, `Please wait ${minutesLeft} minute(s) before requesting again`)
+      );
+    }
+
+    // Generate reset token
     const resetToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: "1h" });
 
-    // Here you would send the resetToken to the user's email
+    // Send the reset token to user's email
     sendResetPasswordEmail(email, resetToken)
-      .then(() => {
+      .then(async () => {
         console.log("Password reset email sent to:", email);
-        // For simplicity, just returned the response
+
+        // Save timestamp to DB
+        userAccount.lastPasswordResetRequest = now;
+        await userAccount.save();
+
         res.send(
-          createResponse(0, "Password reset token generated to ${email}", {
-            email,
-          })
+          createResponse(0, `Password reset token sent to ${email}`, { email })
         );
       })
       .catch((err) => {
         console.error("Error sending password reset email:", err);
         return res.status(500).send(createResponse(3, "Failed to send email"));
       });
+
   } catch (err) {
     console.error(err);
     res.status(500).send(createResponse(3, "Server error"));
   }
 });
+
 
 // POST /reset-password
 router.post("/resetPassword", async (req, res) => {

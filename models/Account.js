@@ -49,6 +49,9 @@ const accountSchema = new mongoose.Schema({
   lastEmailVerificationSent: {
     type: Date,
   },
+  lastPasswordResetRequest: {
+    type: Date,
+  },
 });
 
 const Account = mongoose.model("Account", accountSchema);
