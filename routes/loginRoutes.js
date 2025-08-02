@@ -546,13 +546,27 @@ router.post("/forgotPassword", async (req, res) => {
     const now = new Date();
     const oneHourAgo = new Date(now.getTime() - 3600000); // 1 hour = 3600000 ms
 
-    if (userAccount.lastPasswordResetRequest && userAccount.lastPasswordResetRequest > oneHourAgo) {
+    if (
+      userAccount.lastPasswordResetRequest &&
+      userAccount.lastPasswordResetRequest > oneHourAgo
+    ) {
       const minutesLeft = Math.ceil(
-        (userAccount.lastPasswordResetRequest.getTime() - oneHourAgo.getTime()) / 60000
+        (userAccount.lastPasswordResetRequest.getTime() -
+          oneHourAgo.getTime()) /
+          60000
       );
-      return res.status(429).send(
-        createResponse(4, `Please wait ${minutesLeft} minute(s) before requesting again`)
+      console.log(
+        `Please wait ${minutesLeft} minute(s) before requesting again`,
+        { minutesLeft }
       );
+      return res
+        .status(429)
+        .send(
+          createResponse(
+            4,
+            `Please wait ${minutesLeft} minute(s) before requesting again`
+          )
+        );
     }
 
     // Generate reset token
@@ -575,13 +589,11 @@ router.post("/forgotPassword", async (req, res) => {
         console.error("Error sending password reset email:", err);
         return res.status(500).send(createResponse(3, "Failed to send email"));
       });
-
   } catch (err) {
     console.error(err);
     res.status(500).send(createResponse(3, "Server error"));
   }
 });
-
 
 // POST /reset-password
 router.post("/resetPassword", async (req, res) => {
