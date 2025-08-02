@@ -10,7 +10,7 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = async function sendVerificationEmail(to, token) {
-  const link = `https://nodejs-server-for-unity3dgame-login-5vxc.onrender.com/u3d/resetPassword?token=${token}&email=${encodeURIComponent(
+  const link = `https://deezero7.github.io/webapp_for_Unity3dGame_nextjs-/resetPasswordPage?token=${token}&email=${encodeURIComponent(
     to
   )}`;
 

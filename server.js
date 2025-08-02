@@ -28,6 +28,7 @@ app.use(
       "http://localhost:3000",
       "https://deezero7.github.io",
       "https://deezero7.github.io/webapp_for_Unity3dGame_nextjs-",
+      "https://deezero7.github.io/webapp_for_Unity3dGame_nextjs-/resetPasswordPage",
     ], // replace with your actual frontend domain
     credentials: true, // if using cookies/auth tokens
   })
