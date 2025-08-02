@@ -16,6 +16,8 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const auth = require("../middleware/auth");
 // for sending verification email
 const sendVerificationEmail = require("../utils/sendVerificationEmail");
+// for sending reset password email
+const sendResetPasswordEmail = require("../utils/sendResetPasswordEmail");
 
 // regex for password validation
 // at least 6 characters, 1 uppercase, 1 lowercase, 1 number, and one special character (@$!%*?&)
@@ -43,7 +45,7 @@ var createResponse = function (
 ) {
   return { code, message, userData, ...extraFields };
 };
-//response object to limit the amount of data sent to the client
+//response game Data object to limit the amount of data sent to the client, can be used in createResponse->userData.
 function safeUserData(user) {
   const data = {
     username: user.username,
@@ -525,5 +527,97 @@ router.post("/validate-token", async (req, res) => {
     res.status(500).send({ code: 500, message: "Server error" });
   }
 });
+
+//#region forgot password
+// endpoint for forgetting password
+router.post("/forgotPassword", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).send(createResponse(1, "email are required"));
+    }
+
+    const userAccount = await mongooseAcc.findOne({ email });
+    if (!userAccount) {
+      return res.status(404).send(createResponse(2, "email not found"));
+    }
+
+    // Generate a password reset token
+    const resetToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: "1h" });
+
+    // Here you would send the resetToken to the user's email
+    sendResetPasswordEmail(email, resetToken)
+      .then(() => {
+        console.log("Password reset email sent to:", email);
+        // For simplicity, just returned the response
+        res.send(
+          createResponse(0, "Password reset token generated to ${email}", {
+            email,
+          })
+        );
+      })
+      .catch((err) => {
+        console.error("Error sending password reset email:", err);
+        return res.status(500).send(createResponse(3, "Failed to send email"));
+      });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send(createResponse(3, "Server error"));
+  }
+});
+
+// POST /reset-password
+router.post("/resetPassword", async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res
+        .status(400)
+        .send(createResponse(1, "Token and new password are required"));
+    }
+
+    if (!PASSWORD_REGEX.test(newPassword)) {
+      return res
+        .status(400)
+        .send(
+          createResponse(
+            2,
+            "Password must be at least 6 characters long and contain at least one uppercase letter, one lowercase letter, and one number"
+          )
+        );
+    }
+
+    // Verify token
+    let payload;
+    try {
+      payload = jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return res
+        .status(400)
+        .send(createResponse(3, "Invalid or expired token"));
+    }
+
+    const user = await mongooseAcc.findOne({ email: payload.email });
+    if (!user) {
+      return res.status(404).send(createResponse(4, "User not found"));
+    }
+
+    // Hash new password
+    const salt = crypto.randomBytes(16);
+    const hash = await argon2.hash(newPassword, salt);
+
+    // Update user password
+    user.password = hash;
+    user.salt = salt;
+    await user.save();
+
+    return res.send(createResponse(0, "Password reset successful"));
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send(createResponse(500, "Server error"));
+  }
+});
+//#endregion
 
 module.exports = router;

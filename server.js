@@ -41,7 +41,7 @@ const routesPath = path.join(__dirname, "routes");
 fs.readdirSync(routesPath).forEach((file) => {
   if (file.endsWith(".js")) {
     const route = require(path.join(routesPath, file));
-    app.use("/u3d", route); // All routes under /api/
+    app.use("/u3d", route); // All routes under /u3d/
     console.log(`Loaded routes from ${file}`);
   }
 });

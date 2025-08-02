@@ -1,3 +1,4 @@
+//for password reset email its different link and subject so, different file
 const nodemailer = require("nodemailer");
 
 const transporter = nodemailer.createTransport({
@@ -9,19 +10,19 @@ const transporter = nodemailer.createTransport({
 });
 
 module.exports = async function sendVerificationEmail(to, token) {
-  const link = `https://nodejs-server-for-unity3dgame-login-5vxc.onrender.com/u3d/verify-email?token=${token}&email=${encodeURIComponent(
+  const link = `https://nodejs-server-for-unity3dgame-login-5vxc.onrender.com/u3d//forgot-password?token=${token}&email=${encodeURIComponent(
     to
   )}`;
   try {
     await transporter.sendMail({
       from: `"deeS Unity Game" <${process.env.EMAIL_USER}>`,
       to,
-      subject: "Verify Your Email",
+      subject: "Password Reset Request",
       html: `
         <p>Hello,</p>
-        <p>Thank you for signing up. Please verify your email by clicking the link below:</p>
+        <p>Now you can reset your password by clicking the link below:</p>
         <p><a href="${link}" target="_blank">${link}</a></p>
-        <p>This link will expire in 24 hours.</p>
+        <p>This link will expire in 1 hours.</p>
       `,
     });
     console.log("Verification email sent to:", to);
